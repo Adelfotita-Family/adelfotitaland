@@ -368,12 +368,18 @@
             <a href="#process">Процесс</a>
             <a href="#contact">Контакты</a>
         </nav>
-        <div class="foot-copy">&copy; 2025 Adelfotita Family. Все права защищены.</div>
+        <div class="foot-copy">  &copy; <span id="start-year">2020</span>–<span id="current-year"></span> Adelfotita Family. Все права защищены.</div>
     </div>
 </footer>
-
+<!-- Год в копирайте -->
+<script>
+  const startYear = 2020;
+  const currentYear = new Date().getFullYear();
+  document.getElementById('start-year').textContent = startYear;
+  document.getElementById('current-year').textContent = currentYear;
+</script>
 <!-- SCRIPTS -->
-<script src="/js/script.js"></script>
+<script src="../js/script.js"></script>
 <!-- Three.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <!-- GSAP -->
