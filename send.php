@@ -10,7 +10,7 @@ define('MAIL_SUBJECT', 'Новая заявка с сайта Adelfotita');
 
 // Telegram
 define('TG_BOT_TOKEN', '8728795186:AAHn7TVt7R1iRafZajvg_BmlSOov_Y-eBuA');        // токен от @BotFather
-define('TG_CHAT_ID',   '1057459289');            // ID чата/канала куда слать
+define('TG_CHAT_ID',   '-1003743857167');            // ID чата/канала куда слать
 
 // ============================================================
 // CORS + JSON-ответы
