@@ -405,7 +405,7 @@
             <a href="mailto:hello@adelfotita.ru" class="email-big reveal">hello@adelfotita.ru</a>
             <div class="c-details reveal d2">
                 <div class="c-det"><span class="c-lbl">Локация</span><span class="c-val">Москва, Россия</span></div>
-                <div class="c-det"><span class="c-lbl">Доступность</span><span class="c-val">Пн–Пт, 9:00–18:00 МСК</span></div>
+                <div class="c-det"><span class="c-lbl">Доступность</span><span class="c-val">Пн–Пт, 10:00–18:00 МСК</span></div>
                 <div class="c-det"><span class="c-lbl">Ответ</span><span class="c-val">В течение 24 часов</span></div>
             </div>
             <div class="c-social reveal d3">
@@ -415,12 +415,21 @@
                 <a href="#" class="soc-lnk" aria-label="Behance"><i class="fa-brands fa-behance"></i></a>
             </div>
         </div>
-        <form class="cform reveal" id="cform">
-            <div><label class="flbl">Ваше имя *</label><input class="finput" type="text" placeholder="Иван Иванов" required></div>
-            <div><label class="flbl">Email *</label><input class="finput" type="email" placeholder="ivan@company.ru" required></div>
+
+        <form class="cform reveal" id="cform" novalidate>
+            <div>
+                <label class="flbl">Ваше имя *</label>
+                <input class="finput" id="f-name" type="text" name="name" placeholder="Иван Иванов" required>
+                <span class="f-err" id="err-name"></span>
+            </div>
+            <div>
+                <label class="flbl">Email *</label>
+                <input class="finput" id="f-email" type="email" name="email" placeholder="ivan@company.ru" required>
+                <span class="f-err" id="err-email"></span>
+            </div>
             <div>
                 <label class="flbl">Нужная услуга</label>
-                <select class="fselect">
+                <select class="fselect" id="f-service" name="service">
                     <option value="">Выберите услугу</option>
                     <option>Разработка на WordPress</option>
                     <option>Дизайн и разработка тем</option>
@@ -430,14 +439,156 @@
                     <option>Поддержка и обслуживание</option>
                 </select>
             </div>
-            <div><label class="flbl">Детали проекта *</label><textarea class="ftextarea" placeholder="Расскажите о вашем проекте..." required></textarea></div>
-            <button type="submit" class="btn btn-white" style="width:100%;justify-content:center;">
-                <span id="sbtxt">Отправить сообщение</span> <i class="fa-solid fa-arrow-right fa-sm"></i>
+            <div>
+                <label class="flbl">Детали проекта *</label>
+                <textarea class="ftextarea" id="f-message" name="message" placeholder="Расскажите о вашем проекте..." required></textarea>
+                <span class="f-err" id="err-message"></span>
+            </div>
+            <button type="submit" class="btn btn-white" id="f-submit" style="width:100%;justify-content:center;">
+                <span id="sbtxt">Отправить сообщение</span>
+                <i class="fa-solid fa-arrow-right fa-sm" id="f-icon"></i>
+                <i class="fa-solid fa-spinner fa-spin fa-sm" id="f-spinner" style="display:none;"></i>
             </button>
             <div class="form-msg" id="form-msg"></div>
         </form>
     </div>
 </section>
+
+<style>
+.f-err {
+    display: block;
+    font-size: 0.75rem;
+    color: #ff6b6b;
+    margin-top: 0.3rem;
+    min-height: 1em;
+}
+.finput.invalid,
+.ftextarea.invalid {
+    border-color: #ff6b6b !important;
+}
+.form-msg {
+    display: none;
+    margin-top: 1rem;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.form-msg.success {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.85);
+}
+.form-msg.error {
+    background: rgba(255,107,107,0.08);
+    border: 1px solid rgba(255,107,107,0.3);
+    color: #ff6b6b;
+}
+</style>
+
+<script>
+(function () {
+    const form     = document.getElementById('cform');
+    const submitBtn = document.getElementById('f-submit');
+    const sbtxt    = document.getElementById('sbtxt');
+    const icon     = document.getElementById('f-icon');
+    const spinner  = document.getElementById('f-spinner');
+    const formMsg  = document.getElementById('form-msg');
+
+    const fields = {
+        name:    { el: document.getElementById('f-name'),    err: document.getElementById('err-name') },
+        email:   { el: document.getElementById('f-email'),   err: document.getElementById('err-email') },
+        message: { el: document.getElementById('f-message'), err: document.getElementById('err-message') },
+    };
+
+    // Сброс ошибки при вводе
+    Object.values(fields).forEach(({ el, err }) => {
+        el.addEventListener('input', () => {
+            el.classList.remove('invalid');
+            err.textContent = '';
+        });
+    });
+
+    // Валидация
+    function validate() {
+        let valid = true;
+
+        if (!fields.name.el.value.trim()) {
+            setError(fields.name, 'Введите ваше имя');
+            valid = false;
+        }
+
+        const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRe.test(fields.email.el.value.trim())) {
+            setError(fields.email, 'Введите корректный email');
+            valid = false;
+        }
+
+        if (!fields.message.el.value.trim()) {
+            setError(fields.message, 'Расскажите о вашем проекте');
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    function setError({ el, err }, text) {
+        el.classList.add('invalid');
+        err.textContent = text;
+    }
+
+    function setLoading(on) {
+        submitBtn.disabled = on;
+        sbtxt.textContent  = on ? 'Отправка...' : 'Отправить сообщение';
+        icon.style.display    = on ? 'none'         : '';
+        spinner.style.display = on ? ''             : 'none';
+    }
+
+    function showMsg(text, type) {
+        formMsg.textContent  = text;
+        formMsg.className    = 'form-msg ' + type;
+        formMsg.style.display = 'block';
+        formMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Отправка
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        formMsg.style.display = 'none';
+
+        if (!validate()) return;
+
+        setLoading(true);
+
+        const body = new FormData();
+        body.append('name',    fields.name.el.value.trim());
+        body.append('email',   fields.email.el.value.trim());
+        body.append('service', document.getElementById('f-service').value);
+        body.append('message', fields.message.el.value.trim());
+
+        try {
+            const res  = await fetch('/send.php', { method: 'POST', body });
+            const data = await res.json();
+
+            if (data.ok) {
+                showMsg('✓ Сообщение отправлено! Мы ответим в течение 24 часов.', 'success');
+                form.reset();
+                // Сброс классов ошибок после reset
+                Object.values(fields).forEach(({ el, err }) => {
+                    el.classList.remove('invalid');
+                    err.textContent = '';
+                });
+            } else {
+                showMsg('✗ ' + (data.error || 'Ошибка отправки. Попробуйте позже.'), 'error');
+            }
+        } catch {
+            showMsg('✗ Не удалось связаться с сервером. Проверьте соединение.', 'error');
+        } finally {
+            setLoading(false);
+        }
+    });
+})();
+</script>
 
 <footer>
     <div>
