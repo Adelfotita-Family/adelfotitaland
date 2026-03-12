@@ -454,140 +454,128 @@
     </div>
 </section>
 
-<style>
-.f-err {
-    display: block;
-    font-size: 0.75rem;
-    color: #ff6b6b;
-    margin-top: 0.3rem;
-    min-height: 1em;
-}
-.finput.invalid,
-.ftextarea.invalid {
-    border-color: #ff6b6b !important;
-}
-.form-msg {
-    display: none;
-    margin-top: 1rem;
-    padding: 1rem 1.25rem;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    line-height: 1.5;
-}
-.form-msg.success {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: rgba(255,255,255,0.85);
-}
-.form-msg.error {
-    background: rgba(255,107,107,0.08);
-    border: 1px solid rgba(255,107,107,0.3);
-    color: #ff6b6b;
-}
-</style>
-
 <script>
-(function () {
-    const form     = document.getElementById('cform');
-    const submitBtn = document.getElementById('f-submit');
-    const sbtxt    = document.getElementById('sbtxt');
-    const icon     = document.getElementById('f-icon');
-    const spinner  = document.getElementById('f-spinner');
-    const formMsg  = document.getElementById('form-msg');
+// ============================================================
+// CONTACT FORM — прямая отправка в Telegram (без сервера)
+// ============================================================
+function initForm() {
+  const form = document.getElementById('cform');
+  if (!form || form.dataset.initialized) return;
+  form.dataset.initialized = 'true';
 
-    const fields = {
-        name:    { el: document.getElementById('f-name'),    err: document.getElementById('err-name') },
-        email:   { el: document.getElementById('f-email'),   err: document.getElementById('err-email') },
-        message: { el: document.getElementById('f-message'), err: document.getElementById('err-message') },
-    };
+  const TG_BOT_TOKEN = '8728795186:AAFNGTx4uSBx6b2dTpn1UkzuJC-FMbYtyog';
+  const TG_CHAT_ID   = '-5287138077'; // уточните через @userinfobot если не приходит
 
-    // Сброс ошибки при вводе
-    Object.values(fields).forEach(({ el, err }) => {
-        el.addEventListener('input', () => {
-            el.classList.remove('invalid');
-            err.textContent = '';
+  const submitBtn = document.getElementById('f-submit');
+  const sbtxt     = document.getElementById('sbtxt');
+  const iconEl    = document.getElementById('f-icon');
+  const spinner   = document.getElementById('f-spinner');
+  const formMsg   = document.getElementById('form-msg');
+
+  const fields = {
+    name:    { el: document.getElementById('f-name'),    err: document.getElementById('err-name') },
+    email:   { el: document.getElementById('f-email'),   err: document.getElementById('err-email') },
+    message: { el: document.getElementById('f-message'), err: document.getElementById('err-message') },
+  };
+
+  // Сброс ошибки при вводе
+  Object.values(fields).forEach(({ el, err }) => {
+    if (!el) return;
+    el.addEventListener('input', () => {
+      el.classList.remove('invalid');
+      if (err) err.textContent = '';
+    });
+  });
+
+  function setError({ el, err }, text) {
+    el?.classList.add('invalid');
+    if (err) err.textContent = text;
+  }
+
+  function validate() {
+    let valid = true;
+    if (!fields.name.el?.value.trim()) {
+      setError(fields.name, 'Введите ваше имя'); valid = false;
+    }
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRe.test(fields.email.el?.value.trim())) {
+      setError(fields.email, 'Введите корректный email'); valid = false;
+    }
+    if (!fields.message.el?.value.trim()) {
+      setError(fields.message, 'Расскажите о вашем проекте'); valid = false;
+    }
+    return valid;
+  }
+
+  function setLoading(on) {
+    if (submitBtn) submitBtn.disabled = on;
+    if (sbtxt)     sbtxt.textContent  = on ? 'Отправка...' : 'Отправить сообщение';
+    if (iconEl)    iconEl.style.display  = on ? 'none' : '';
+    if (spinner)   spinner.style.display = on ? ''     : 'none';
+  }
+
+  function showMsg(text, type) {
+    if (!formMsg) return;
+    formMsg.textContent   = text;
+    formMsg.className     = 'form-msg ' + type;
+    formMsg.style.display = 'block';
+    formMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (formMsg) formMsg.style.display = 'none';
+    if (!validate()) return;
+
+    setLoading(true);
+
+    const name    = fields.name.el.value.trim();
+    const email   = fields.email.el.value.trim();
+    const service = document.getElementById('f-service')?.value || 'не выбрана';
+    const message = fields.message.el.value.trim();
+
+    const text = [
+      '📩 Новая заявка с сайта Adelfotita',
+      '',
+      `👤 Имя: ${name}`,
+      `📧 Email: ${email}`,
+      `🛠 Услуга: ${service}`,
+      '',
+      `💬 Сообщение:`,
+      message,
+    ].join('\n');
+
+    try {
+      const res = await fetch(
+        `https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: TG_CHAT_ID, text }),
+        }
+      );
+      const data = await res.json();
+
+      if (data.ok) {
+        showMsg('✓ Сообщение отправлено! Мы ответим в течение 24 часов.', 'success');
+        form.reset();
+        Object.values(fields).forEach(({ el, err }) => {
+          el?.classList.remove('invalid');
+          if (err) err.textContent = '';
         });
-    });
-
-    // Валидация
-    function validate() {
-        let valid = true;
-
-        if (!fields.name.el.value.trim()) {
-            setError(fields.name, 'Введите ваше имя');
-            valid = false;
-        }
-
-        const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRe.test(fields.email.el.value.trim())) {
-            setError(fields.email, 'Введите корректный email');
-            valid = false;
-        }
-
-        if (!fields.message.el.value.trim()) {
-            setError(fields.message, 'Расскажите о вашем проекте');
-            valid = false;
-        }
-
-        return valid;
+      } else {
+        // Telegram вернул ошибку — показываем mailto как запасной вариант
+        console.error('Telegram error:', data);
+        showMsg('✗ Ошибка отправки. Напишите нам напрямую: hello@adelfotita.ru', 'error');
+      }
+    } catch (err) {
+      console.error('Fetch error:', err);
+      showMsg('✗ Ошибка сети. Напишите нам напрямую: hello@adelfotita.ru', 'error');
+    } finally {
+      setLoading(false);
     }
-
-    function setError({ el, err }, text) {
-        el.classList.add('invalid');
-        err.textContent = text;
-    }
-
-    function setLoading(on) {
-        submitBtn.disabled = on;
-        sbtxt.textContent  = on ? 'Отправка...' : 'Отправить сообщение';
-        icon.style.display    = on ? 'none'         : '';
-        spinner.style.display = on ? ''             : 'none';
-    }
-
-    function showMsg(text, type) {
-        formMsg.textContent  = text;
-        formMsg.className    = 'form-msg ' + type;
-        formMsg.style.display = 'block';
-        formMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    // Отправка
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        formMsg.style.display = 'none';
-
-        if (!validate()) return;
-
-        setLoading(true);
-
-        const body = new FormData();
-        body.append('name',    fields.name.el.value.trim());
-        body.append('email',   fields.email.el.value.trim());
-        body.append('service', document.getElementById('f-service').value);
-        body.append('message', fields.message.el.value.trim());
-
-        try {
-            const res  = await fetch('/send.php', { method: 'POST', body });
-            const data = await res.json();
-
-            if (data.ok) {
-                showMsg('✓ Сообщение отправлено! Мы ответим в течение 24 часов.', 'success');
-                form.reset();
-                // Сброс классов ошибок после reset
-                Object.values(fields).forEach(({ el, err }) => {
-                    el.classList.remove('invalid');
-                    err.textContent = '';
-                });
-            } else {
-                showMsg('✗ ' + (data.error || 'Ошибка отправки. Попробуйте позже.'), 'error');
-            }
-        } catch {
-            showMsg('✗ Не удалось связаться с сервером. Проверьте соединение.', 'error');
-        } finally {
-            setLoading(false);
-        }
-    });
-})();
+  });
+}
 </script>
 
 <footer>
@@ -996,106 +984,6 @@ function initFilter() {
         }
       });
     });
-  });
-}
-
-// ============================================================
-// CONTACT FORM — реальная отправка на send.php
-// ============================================================
-function initForm() {
-  const form      = document.getElementById('cform');
-  if (!form) return;
- 
-  if (form.dataset.initialized) return;
-  form.dataset.initialized = 'true';
- 
-  const submitBtn = document.getElementById('f-submit');
-  const sbtxt     = document.getElementById('sbtxt');
-  const iconEl    = document.getElementById('f-icon');
-  const spinner   = document.getElementById('f-spinner');
-  const formMsg   = document.getElementById('form-msg');
- 
-  const fields = {
-    name:    { el: document.getElementById('f-name'),    err: document.getElementById('err-name') },
-    email:   { el: document.getElementById('f-email'),   err: document.getElementById('err-email') },
-    message: { el: document.getElementById('f-message'), err: document.getElementById('err-message') },
-  };
- 
-  Object.values(fields).forEach(({ el, err }) => {
-    if (!el) return;
-    el.addEventListener('input', () => {
-      el.classList.remove('invalid');
-      if (err) err.textContent = '';
-    });
-  });
- 
-  function setError({ el, err }, text) {
-    el?.classList.add('invalid');
-    if (err) err.textContent = text;
-  }
- 
-  function validate() {
-    let valid = true;
-    if (!fields.name.el?.value.trim()) {
-      setError(fields.name, 'Введите ваше имя'); valid = false;
-    }
-    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRe.test(fields.email.el?.value.trim())) {
-      setError(fields.email, 'Введите корректный email'); valid = false;
-    }
-    if (!fields.message.el?.value.trim()) {
-      setError(fields.message, 'Расскажите о вашем проекте'); valid = false;
-    }
-    return valid;
-  }
- 
-  function setLoading(on) {
-    if (submitBtn) submitBtn.disabled = on;
-    if (sbtxt)     sbtxt.textContent  = on ? 'Отправка...' : 'Отправить сообщение';
-    if (iconEl)    iconEl.style.display    = on ? 'none' : '';
-    if (spinner)   spinner.style.display   = on ? ''     : 'none';
-  }
- 
-  function showMsg(text, type) {
-    if (!formMsg) return;
-    formMsg.textContent   = text;
-    formMsg.className     = 'form-msg ' + type;
-    formMsg.style.display = 'block';
-    formMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
- 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (formMsg) formMsg.style.display = 'none';
-    if (!validate()) return;
- 
-    setLoading(true);
- 
-    const body = new FormData();
-    body.append('name',    fields.name.el.value.trim());
-    body.append('email',   fields.email.el.value.trim());
-    body.append('service', document.getElementById('f-service')?.value || '');
-    body.append('message', fields.message.el.value.trim());
- 
-    try {
-      const res  = await fetch('/send.php', { method: 'POST', body });
-      const data = await res.json();
- 
-      if (data.ok) {
-        showMsg('✓ Сообщение отправлено! Мы ответим в течение 24 часов.', 'success');
-        form.reset();
-        Object.values(fields).forEach(({ el, err }) => {
-          el?.classList.remove('invalid');
-          if (err) err.textContent = '';
-        });
-      } else {
-        showMsg('✗ ' + (data.error || 'Ошибка отправки. Попробуйте позже.'), 'error');
-      }
-    } catch (err) {
-      showMsg('✗ Не удалось связаться с сервером. Проверьте соединение.', 'error');
-    } finally {
-      setLoading(false);
-    }
   });
 }
 
