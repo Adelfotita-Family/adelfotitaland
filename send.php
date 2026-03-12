@@ -7,14 +7,19 @@ define('MAIL_FROM',    'noreply@adelfotita.ru');
 define('MAIL_SUBJECT', 'Новая заявка с сайта Adelfotita');
 
 define('TG_BOT_TOKEN', '8728795186:AAFNGTx4uSBx6b2dTpn1UkzuJC-FMbYtyog');
-define('TG_CHAT_ID',   '-5287138077'); // ← уточните ID через @userinfobot
+define('TG_CHAT_ID',   '-5287138077');
 
 // ============================================================
 // CORS + заголовки
 // ============================================================
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -31,9 +36,9 @@ $service = trim(strip_tags($_POST['service'] ?? ''));
 $message = trim(strip_tags($_POST['message'] ?? ''));
 
 $errors = [];
-if (empty($name))                                    $errors[] = 'Укажите имя';
-if (!filter_var($email, FILTER_VALIDATE_EMAIL))      $errors[] = 'Некорректный email';
-if (empty($message))                                 $errors[] = 'Укажите детали проекта';
+if (empty($name))                               $errors[] = 'Укажите имя';
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Некорректный email';
+if (empty($message))                            $errors[] = 'Укажите детали проекта';
 
 if (!empty($errors)) {
     http_response_code(422);
@@ -64,27 +69,26 @@ $mailSent = mail(
 );
 
 // ============================================================
-// TELEGRAM (MarkdownV2 — корректное экранирование)
+// TELEGRAM — plain text (без Markdown, чтобы не было ошибок)
 // ============================================================
-$tgText  = "📩 *Новая заявка с сайта*\n\n";
-$tgText .= "👤 *Имя:* "    . escTg($name)                    . "\n";
-$tgText .= "📧 *Email:* "  . escTg($email)                   . "\n";
-$tgText .= "🛠 *Услуга:* " . escTg($service ?: 'не выбрана') . "\n\n";
-$tgText .= "💬 *Сообщение:*\n" . escTg($message);
+$tgText  = "📩 Новая заявка с сайта\n\n";
+$tgText .= "👤 Имя: {$name}\n";
+$tgText .= "📧 Email: {$email}\n";
+$tgText .= "🛠 Услуга: " . ($service ?: 'не выбрана') . "\n\n";
+$tgText .= "💬 Сообщение:\n{$message}";
 
 $tgPayload = json_encode([
-    'chat_id'    => TG_CHAT_ID,
-    'text'       => $tgText,
-    'parse_mode' => 'MarkdownV2',
+    'chat_id' => TG_CHAT_ID,
+    'text'    => $tgText,
 ], JSON_UNESCAPED_UNICODE);
 
 $ctx = stream_context_create([
     'http' => [
-        'method'  => 'POST',
-        'header'  => "Content-Type: application/json\r\nContent-Length: " . strlen($tgPayload),
-        'content' => $tgPayload,
-        'timeout' => 10,
-        'ignore_errors' => true,
+        'method'         => 'POST',
+        'header'         => "Content-Type: application/json\r\n",
+        'content'        => $tgPayload,
+        'timeout'        => 10,
+        'ignore_errors'  => true,
     ]
 ]);
 
@@ -93,8 +97,7 @@ $tgResponse = @file_get_contents($tgUrl, false, $ctx);
 $tgResult   = $tgResponse ? json_decode($tgResponse, true) : null;
 $tgSent     = $tgResult['ok'] ?? false;
 
-// Логируем ошибку Telegram для отладки (в error_log сервера)
-if (!$tgSent && $tgResponse) {
+if (!$tgSent) {
     error_log('[Adelfotita] Telegram error: ' . $tgResponse);
 }
 
@@ -107,14 +110,6 @@ if ($mailSent || $tgSent) {
     http_response_code(500);
     echo json_encode([
         'ok'    => false,
-        'error' => 'Не удалось отправить сообщение. Попробуйте позже или напишите напрямую на hello@adelfotita.ru',
+        'error' => 'Не удалось отправить сообщение. Напишите напрямую: hello@adelfotita.ru',
     ]);
-}
-
-// ============================================================
-// ХЕЛПЕР — экранирование для MarkdownV2
-// ============================================================
-function escTg(string $text): string {
-    // Все спецсимволы MarkdownV2 должны быть экранированы обратным слешем
-    return preg_replace('/([_*\[\]()~`>#+\-=|{}.!])/', '\\\\$1', $text);
 }
