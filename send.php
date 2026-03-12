@@ -6,8 +6,8 @@ define('MAIL_TO',      'hello@adelfotita.ru');
 define('MAIL_FROM',    'noreply@adelfotita.ru');
 define('MAIL_SUBJECT', 'Новая заявка с сайта Adelfotita');
 
-define('TG_BOT_TOKEN', '8728795186:AAHn7TVt7R1iRafZajvg_BmlSOov_Y-eBuA');
-define('TG_CHAT_ID',   '-1003743857167'); // ← уточните ID через @userinfobot
+define('TG_BOT_TOKEN', '8728795186:AAFNGTx4uSBx6b2dTpn1UkzuJC-FMbYtyog');
+define('TG_CHAT_ID',   '-5287138077'); // ← уточните ID через @userinfobot
 
 // ============================================================
 // CORS + заголовки
