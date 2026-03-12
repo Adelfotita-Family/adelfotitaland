@@ -417,16 +417,48 @@
         </div>
 
         <form class="cform reveal" id="cform" novalidate>
+
+            <!-- Имя -->
             <div>
                 <label class="flbl">Ваше имя *</label>
                 <input class="finput" id="f-name" type="text" name="name" placeholder="Иван Иванов" required>
                 <span class="f-err" id="err-name"></span>
             </div>
+
+            <!-- Email -->
             <div>
                 <label class="flbl">Email *</label>
                 <input class="finput" id="f-email" type="email" name="email" placeholder="ivan@company.ru" required>
                 <span class="f-err" id="err-email"></span>
             </div>
+
+            <!-- Телефон / Telegram — переключатель -->
+            <div>
+                <div class="contact-type-wrap">
+                    <label class="flbl" style="margin-bottom:0;">Связь</label>
+                    <div class="contact-type-toggle">
+                        <button type="button" class="ct-btn active" id="ct-phone">
+                            <i class="fa-solid fa-phone fa-xs"></i> Телефон
+                        </button>
+                        <button type="button" class="ct-btn" id="ct-tg">
+                            <i class="fa-brands fa-telegram fa-xs"></i> Telegram
+                        </button>
+                    </div>
+                </div>
+                <div id="ct-phone-wrap" style="margin-top:0.5rem;">
+                    <input class="finput" id="f-phone" type="tel" name="phone" placeholder="+7 (999) 000-00-00">
+                    <span class="f-err" id="err-phone"></span>
+                </div>
+                <div id="ct-tg-wrap" style="display:none;margin-top:0.5rem;">
+                    <div class="finput-prefix-wrap">
+                        <span class="finput-prefix">@</span>
+                        <input class="finput finput-prefixed" id="f-tg" type="text" name="telegram" placeholder="username">
+                    </div>
+                    <span class="f-err" id="err-tg"></span>
+                </div>
+            </div>
+
+            <!-- Услуга -->
             <div>
                 <label class="flbl">Нужная услуга</label>
                 <select class="fselect" id="f-service" name="service">
@@ -437,26 +469,147 @@
                     <option>Интернет-магазин WooCommerce</option>
                     <option>Производительность и SEO</option>
                     <option>Поддержка и обслуживание</option>
+                    <option>Дизайн логотипа</option>
+                    <option>Разработка фирменного стиля</option>
+                    <option>Доработка дизайна</option>
                 </select>
             </div>
+
+            <!-- Детали проекта -->
             <div>
                 <label class="flbl">Детали проекта *</label>
                 <textarea class="ftextarea" id="f-message" name="message" placeholder="Расскажите о вашем проекте..." required></textarea>
                 <span class="f-err" id="err-message"></span>
             </div>
+
+            <!-- Капча -->
+            <div class="captcha-wrap">
+                <label class="flbl">
+                    Защита от спама:&nbsp;<span id="captcha-question" class="captcha-q"></span>&nbsp;= ?
+                </label>
+                <input class="finput captcha-input" id="f-captcha" type="number" placeholder="Ответ" autocomplete="off">
+                <span class="f-err" id="err-captcha"></span>
+            </div>
+
+            <!-- Кнопка -->
             <button type="submit" class="btn btn-white" id="f-submit" style="width:100%;justify-content:center;">
                 <span id="sbtxt">Отправить сообщение</span>
                 <i class="fa-solid fa-arrow-right fa-sm" id="f-icon"></i>
                 <i class="fa-solid fa-spinner fa-spin fa-sm" id="f-spinner" style="display:none;"></i>
             </button>
+
             <div class="form-msg" id="form-msg"></div>
         </form>
     </div>
 </section>
 
+<style>
+.f-err {
+    display: block;
+    font-size: 0.75rem;
+    color: #ff6b6b;
+    margin-top: 0.3rem;
+    min-height: 1em;
+}
+.finput.invalid,
+.ftextarea.invalid {
+    border-color: #ff6b6b !important;
+}
+.form-msg {
+    display: none;
+    margin-top: 1rem;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.form-msg.success {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.85);
+}
+.form-msg.error {
+    background: rgba(255,107,107,0.08);
+    border: 1px solid rgba(255,107,107,0.3);
+    color: #ff6b6b;
+}
+
+/* Переключатель */
+.contact-type-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0;
+}
+.contact-type-toggle {
+    display: flex;
+    gap: 3px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 3px;
+}
+.ct-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.4);
+    font-family: inherit;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.25s, color 0.25s;
+    white-space: nowrap;
+}
+.ct-btn.active {
+    background: rgba(255,255,255,0.14);
+    color: #fff;
+}
+.ct-btn:hover:not(.active) {
+    color: rgba(255,255,255,0.7);
+}
+
+/* Инпут с @ */
+.finput-prefix-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.finput-prefix {
+    position: absolute;
+    left: 1rem;
+    color: rgba(255,255,255,0.35);
+    font-size: 1rem;
+    pointer-events: none;
+    z-index: 1;
+    line-height: 1;
+}
+.finput-prefixed {
+    padding-left: 1.9rem !important;
+}
+
+/* Капча */
+.captcha-wrap { display: flex; flex-direction: column; }
+.captcha-q {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    color: #fff;
+    letter-spacing: 0.05em;
+}
+.captcha-input {
+    margin-top: 0.5rem;
+    max-width: 130px;
+    -moz-appearance: textfield;
+}
+.captcha-input::-webkit-outer-spin-button,
+.captcha-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+</style>
+
 <script>
 // ============================================================
-// CONTACT FORM — прямая отправка в Telegram (без сервера)
+// CONTACT FORM — Telegram + переключатель + math captcha
 // ============================================================
 function initForm() {
   const form = document.getElementById('cform');
@@ -464,7 +617,7 @@ function initForm() {
   form.dataset.initialized = 'true';
 
   const TG_BOT_TOKEN = '8728795186:AAFNGTx4uSBx6b2dTpn1UkzuJC-FMbYtyog';
-  const TG_CHAT_ID   = '1057459289'; // уточните через @userinfobot если не приходит
+  const TG_CHAT_ID   = '1057459289';
 
   const submitBtn = document.getElementById('f-submit');
   const sbtxt     = document.getElementById('sbtxt');
@@ -476,9 +629,49 @@ function initForm() {
     name:    { el: document.getElementById('f-name'),    err: document.getElementById('err-name') },
     email:   { el: document.getElementById('f-email'),   err: document.getElementById('err-email') },
     message: { el: document.getElementById('f-message'), err: document.getElementById('err-message') },
+    captcha: { el: document.getElementById('f-captcha'), err: document.getElementById('err-captcha') },
   };
 
-  // Сброс ошибки при вводе
+  // ── Переключатель ──
+  let contactType = 'phone';
+  const ctPhoneBtn  = document.getElementById('ct-phone');
+  const ctTgBtn     = document.getElementById('ct-tg');
+  const ctPhoneWrap = document.getElementById('ct-phone-wrap');
+  const ctTgWrap    = document.getElementById('ct-tg-wrap');
+
+  function switchContact(type) {
+    contactType = type;
+    const isPhone = type === 'phone';
+    ctPhoneBtn.classList.toggle('active', isPhone);
+    ctTgBtn.classList.toggle('active', !isPhone);
+    ctPhoneWrap.style.display = isPhone ? '' : 'none';
+    ctTgWrap.style.display    = isPhone ? 'none' : '';
+    document.getElementById(isPhone ? 'f-tg' : 'f-phone').value = '';
+    document.getElementById(isPhone ? 'err-tg' : 'err-phone').textContent = '';
+  }
+  ctPhoneBtn?.addEventListener('click', () => switchContact('phone'));
+  ctTgBtn?.addEventListener('click',    () => switchContact('tg'));
+
+  // ── Капча ──
+  let captchaAnswer = 0;
+  function rnd(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+  function genCaptcha() {
+    const ops = ['+', '−', '×'];
+    const op  = ops[rnd(0, 2)];
+    let a, b, ans;
+    if (op === '+') { a = rnd(1, 20); b = rnd(1, 20); ans = a + b; }
+    if (op === '−') { a = rnd(5, 20); b = rnd(1,  a); ans = a - b; }
+    if (op === '×') { a = rnd(2,  9); b = rnd(2,  9); ans = a * b; }
+    captchaAnswer = ans;
+    const q = document.getElementById('captcha-question');
+    if (q) q.textContent = `${a} ${op} ${b}`;
+    if (fields.captcha.el) fields.captcha.el.value = '';
+    fields.captcha.el?.classList.remove('invalid');
+    if (fields.captcha.err) fields.captcha.err.textContent = '';
+  }
+  genCaptcha();
+
+  // ── Сброс ошибок при вводе ──
   Object.values(fields).forEach(({ el, err }) => {
     if (!el) return;
     el.addEventListener('input', () => {
@@ -486,24 +679,59 @@ function initForm() {
       if (err) err.textContent = '';
     });
   });
+  ['f-phone','f-tg'].forEach(id => {
+    const errId = id === 'f-phone' ? 'err-phone' : 'err-tg';
+    document.getElementById(id)?.addEventListener('input', () => {
+      document.getElementById(id)?.classList.remove('invalid');
+      const e = document.getElementById(errId);
+      if (e) e.textContent = '';
+    });
+  });
 
+  // ── Хелперы ──
   function setError({ el, err }, text) {
     el?.classList.add('invalid');
     if (err) err.textContent = text;
   }
+  function setErrById(inputId, errId, text) {
+    document.getElementById(inputId)?.classList.add('invalid');
+    const e = document.getElementById(errId);
+    if (e) e.textContent = text;
+  }
 
+  // ── Валидация ──
   function validate() {
     let valid = true;
+
     if (!fields.name.el?.value.trim()) {
       setError(fields.name, 'Введите ваше имя'); valid = false;
     }
-    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRe.test(fields.email.el?.value.trim())) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email.el?.value.trim())) {
       setError(fields.email, 'Введите корректный email'); valid = false;
     }
+
+    // Телефон/TG — необязательно, но формат проверяем
+    if (contactType === 'phone') {
+      const v = document.getElementById('f-phone')?.value.trim();
+      if (v && !/^[\d\s+\-()]{7,18}$/.test(v)) {
+        setErrById('f-phone', 'err-phone', 'Некорректный номер'); valid = false;
+      }
+    } else {
+      const v = document.getElementById('f-tg')?.value.trim();
+      if (v && !/^[a-zA-Z0-9_]{3,32}$/.test(v)) {
+        setErrById('f-tg', 'err-tg', 'Только буквы, цифры и _ (3–32 символа)'); valid = false;
+      }
+    }
+
     if (!fields.message.el?.value.trim()) {
       setError(fields.message, 'Расскажите о вашем проекте'); valid = false;
     }
+
+    const userAns = parseInt(fields.captcha.el?.value, 10);
+    if (isNaN(userAns) || userAns !== captchaAnswer) {
+      setError(fields.captcha, 'Неверный ответ — попробуйте ещё раз'); valid = false;
+    }
+
     return valid;
   }
 
@@ -522,6 +750,7 @@ function initForm() {
     formMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
+  // ── Отправка ──
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (formMsg) formMsg.style.display = 'none';
@@ -534,16 +763,19 @@ function initForm() {
     const service = document.getElementById('f-service')?.value || 'не выбрана';
     const message = fields.message.el.value.trim();
 
-    const text = [
-      '📩 Новая заявка с сайта Adelfotita',
-      '',
-      `👤 Имя: ${name}`,
-      `📧 Email: ${email}`,
-      `🛠 Услуга: ${service}`,
-      '',
-      `💬 Сообщение:`,
-      message,
-    ].join('\n');
+    let contactLine = '';
+    if (contactType === 'phone') {
+      const v = document.getElementById('f-phone')?.value.trim();
+      if (v) contactLine = `📞 Телефон: ${v}`;
+    } else {
+      const v = document.getElementById('f-tg')?.value.trim();
+      if (v) contactLine = `✈️ Telegram: @${v}`;
+    }
+
+    const lines = ['📩 Новая заявка с сайта Adelfotita', '',
+      `👤 Имя: ${name}`, `📧 Email: ${email}`];
+    if (contactLine) lines.push(contactLine);
+    lines.push(`🛠 Услуга: ${service}`, '', '💬 Сообщение:', message);
 
     try {
       const res = await fetch(
@@ -551,7 +783,7 @@ function initForm() {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: TG_CHAT_ID, text }),
+          body: JSON.stringify({ chat_id: TG_CHAT_ID, text: lines.join('\n') }),
         }
       );
       const data = await res.json();
@@ -559,18 +791,21 @@ function initForm() {
       if (data.ok) {
         showMsg('✓ Сообщение отправлено! Мы ответим в течение 24 часов.', 'success');
         form.reset();
+        switchContact('phone');
         Object.values(fields).forEach(({ el, err }) => {
           el?.classList.remove('invalid');
           if (err) err.textContent = '';
         });
+        genCaptcha();
       } else {
-        // Telegram вернул ошибку — показываем mailto как запасной вариант
         console.error('Telegram error:', data);
-        showMsg('✗ Ошибка отправки. Напишите нам напрямую: hello@adelfotita.ru', 'error');
+        showMsg('✗ Ошибка отправки. Напишите нам: hello@adelfotita.ru', 'error');
+        genCaptcha();
       }
     } catch (err) {
       console.error('Fetch error:', err);
-      showMsg('✗ Ошибка сети. Напишите нам напрямую: hello@adelfotita.ru', 'error');
+      showMsg('✗ Ошибка сети. Напишите нам: hello@adelfotita.ru', 'error');
+      genCaptcha();
     } finally {
       setLoading(false);
     }
