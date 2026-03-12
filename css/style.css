@@ -339,9 +339,15 @@
     .btn:hover i { transform: translate(4px,-4px); }
 
     .scroll-ind {
-      display: flex; flex-direction: column;
-      align-items: center; gap: .75rem;
-      opacity: 0; animation: fadeUp .8s ease forwards 1.2s;
+    top: 7rem;
+    right: -20px;
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .75rem;
+    opacity: 0;
+    animation: fadeUp .8s ease forwards 1.2s;
     }
     .scroll-line {
       width: 1px; height: 70px;
