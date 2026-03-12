@@ -1000,27 +1000,102 @@ function initFilter() {
 }
 
 // ============================================================
-// CONTACT FORM
+// CONTACT FORM — реальная отправка на send.php
 // ============================================================
 function initForm() {
-  const form = document.getElementById('cform');
-  const msg  = document.getElementById('form-msg');
-  const stxt = document.getElementById('sbtxt');
+  const form      = document.getElementById('cform');
   if (!form) return;
-
-  form.addEventListener('submit', e => {
+ 
+  if (form.dataset.initialized) return;
+  form.dataset.initialized = 'true';
+ 
+  const submitBtn = document.getElementById('f-submit');
+  const sbtxt     = document.getElementById('sbtxt');
+  const iconEl    = document.getElementById('f-icon');
+  const spinner   = document.getElementById('f-spinner');
+  const formMsg   = document.getElementById('form-msg');
+ 
+  const fields = {
+    name:    { el: document.getElementById('f-name'),    err: document.getElementById('err-name') },
+    email:   { el: document.getElementById('f-email'),   err: document.getElementById('err-email') },
+    message: { el: document.getElementById('f-message'), err: document.getElementById('err-message') },
+  };
+ 
+  Object.values(fields).forEach(({ el, err }) => {
+    if (!el) return;
+    el.addEventListener('input', () => {
+      el.classList.remove('invalid');
+      if (err) err.textContent = '';
+    });
+  });
+ 
+  function setError({ el, err }, text) {
+    el?.classList.add('invalid');
+    if (err) err.textContent = text;
+  }
+ 
+  function validate() {
+    let valid = true;
+    if (!fields.name.el?.value.trim()) {
+      setError(fields.name, 'Введите ваше имя'); valid = false;
+    }
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRe.test(fields.email.el?.value.trim())) {
+      setError(fields.email, 'Введите корректный email'); valid = false;
+    }
+    if (!fields.message.el?.value.trim()) {
+      setError(fields.message, 'Расскажите о вашем проекте'); valid = false;
+    }
+    return valid;
+  }
+ 
+  function setLoading(on) {
+    if (submitBtn) submitBtn.disabled = on;
+    if (sbtxt)     sbtxt.textContent  = on ? 'Отправка...' : 'Отправить сообщение';
+    if (iconEl)    iconEl.style.display    = on ? 'none' : '';
+    if (spinner)   spinner.style.display   = on ? ''     : 'none';
+  }
+ 
+  function showMsg(text, type) {
+    if (!formMsg) return;
+    formMsg.textContent   = text;
+    formMsg.className     = 'form-msg ' + type;
+    formMsg.style.display = 'block';
+    formMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+ 
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (stxt) stxt.textContent = 'Отправка...';
-    setTimeout(() => {
-      if (stxt) stxt.textContent = 'Отправить сообщение';
-      if (msg) {
-        msg.style.display = 'block';
-        msg.style.color   = 'rgba(255,255,255,.6)';
-        msg.textContent   = '✓ Сообщение отправлено! Мы ответим в течение 24 часов.';
-        gsap.fromTo(msg, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: .4 });
+    if (formMsg) formMsg.style.display = 'none';
+    if (!validate()) return;
+ 
+    setLoading(true);
+ 
+    const body = new FormData();
+    body.append('name',    fields.name.el.value.trim());
+    body.append('email',   fields.email.el.value.trim());
+    body.append('service', document.getElementById('f-service')?.value || '');
+    body.append('message', fields.message.el.value.trim());
+ 
+    try {
+      const res  = await fetch('/send.php', { method: 'POST', body });
+      const data = await res.json();
+ 
+      if (data.ok) {
+        showMsg('✓ Сообщение отправлено! Мы ответим в течение 24 часов.', 'success');
         form.reset();
+        Object.values(fields).forEach(({ el, err }) => {
+          el?.classList.remove('invalid');
+          if (err) err.textContent = '';
+        });
+      } else {
+        showMsg('✗ ' + (data.error || 'Ошибка отправки. Попробуйте позже.'), 'error');
       }
-    }, 1600);
+    } catch (err) {
+      showMsg('✗ Не удалось связаться с сервером. Проверьте соединение.', 'error');
+    } finally {
+      setLoading(false);
+    }
   });
 }
 
